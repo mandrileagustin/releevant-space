@@ -4,8 +4,12 @@ function preload() {
 }
 
 function create() {
-  this.add.image(400, 300, "sky");
+  // scene background
+  this.add.image(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, "sky");
 
-  const player = this.add.image(400, 300, "player");
-  player.setScale(0.2);
+  // playet setup
+  const player = this.add.image(SCREEN_WIDTH / 2, SCREEN_HEIGHT, "player");
+  player.setX((SCREEN_WIDTH - player.width * PLAYER_SCALE) / 2);
+  player.setY(SCREEN_HEIGHT - player.height * PLAYER_SCALE);
+  player.setScale(PLAYER_SCALE);
 }
