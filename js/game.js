@@ -2,7 +2,7 @@
  * Variables used during the game.
  */
  let player;
- let enemy = [];
+ let enemy ;
  let cursors;
  let background1;
  let background2;
@@ -16,19 +16,22 @@
  let propulsion;
  let disparo;
  let pause = false;
+ let sonidoFondo;
+
  
  /**
   * It prelaods all the assets required in the game.
   */
  function preload() {
-   this.load.image("sky", "assets/backgrounds/blue.png");
-   this.load.image("player", "assets/characters/player.png");
-   this.load.image("enemy", "assets/characters/alien2.png");
-   this.load.image("red","assets/backgrounds/red.png")
-   this.load.image("propulsion","assets/characters/propulsion.png")
-   this.load.audio("fondo","assets/sounds/fondo.mp3");
-   this.load.audio("disparo","assets/sounds/disparo.mp3")
-   this.load.image("gameOver","assets/backgrounds/gameOver.png")
+  this.load.image("gameOver","assets/backgrounds/gameOver.png")
+  this.load.image("sky", "assets/backgrounds/blue.png");
+  this.load.image("player", "assets/characters/player.png");
+  this.load.image("enemy", "assets/characters/alien2.png");
+  this.load.image("red","assets/backgrounds/red.png")
+  this.load.image("propulsion","assets/characters/propulsion.png")
+  this.load.audio("fondo","assets/sounds/fondo.mp3");
+  this.load.audio("disparo","assets/sounds/disparo.mp3")
+ 
  }
  
  /**
@@ -41,13 +44,11 @@
 
    /////sonido
 
-  //  let sonidoFondo = this.sound.add("fondo");
-  //  sonidoFondo.loop = true;
-  //  sonidoFondo.play();
+  sonidoFondo = this.sound.add("fondo");
+  sonidoFondo.loop = true;
+  sonidoFondo.play();
 
-   disparo = this.sound.add("disparo");
-   
- 
+  disparo = this.sound.add("disparo");
    // playet setup
    player = this.add.image(SCREEN_WIDTH / 2, SCREEN_HEIGHT, "player");
    player.setX((SCREEN_WIDTH - player.width * PLAYER_SCALE) / 2);
@@ -64,6 +65,7 @@
    gameOver = this.add.image(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, "gameOver");
    gameOver.setX(SCREEN_WIDTH + gameOver.width);
    gameOver.setY(SCREEN_HEIGHT + gameOver.height);
+   sonidoPerder = this.sound.add("perder");
  
    //cursors map into game engine
    cursors = this.input.keyboard.createCursorKeys();
@@ -106,22 +108,22 @@
  /**
   * Updates each game object of the scene.
   */
- function update()  {
+function update()  {
   if(pause) {
     return;
   }
-   this.add.ellipse(player.x,player.y-player.height/2*PLAYER_SCALE,180,200)
-   moverPlayer();
-   moverFondo();
-   if(frame < 0){
+  this.add.ellipse(player.x,player.y-player.height/2*PLAYER_SCALE,180,200)
+  moverPlayer();
+  moverFondo();
+  moverEnemy();
+  if(frame < 0){
      disparar(this);
    }
-   if (contBullet > 0){
+  if (contBullet > 0){
    moverBala();
-   }
+  }
    frame--;
-   moverEnemy();
-   console.log(bullet.length);
+   
 }
 ///// movimiento player
  function moverPlayer() {
@@ -153,33 +155,12 @@
      }
      player.setY(yPlayer);
    }
-   propulsion.setPosition(player.x , player.y +40);
+      propulsion.setPosition(player.x , player.y +40);
       propulsion.explode();
  }
-/// movimiento enemigo
- function moverEnemy()  {
-  enemy.setY(enemy.y + ENEMY_VELOCITY);
-  if (
-    player.x >= enemy.x - (enemy.width * ENEMY_SCALE) / 2 &&
-    player.x <= enemy.x + (enemy.width * ENEMY_SCALE) / 2 &&
-    player.y >= enemy.y - (enemy.height * ENEMY_SCALE) / 2 &&
-    player.y <= enemy.y + (enemy.height * ENEMY_SCALE) / 2 ||
-    enemy.y >= SCREEN_HEIGHT
-  ){
 
-    gameOver.setX(SCREEN_WIDTH /2)
-    gameOver.setY(SCREEN_HEIGHT /2)
-    enemy.destroy()
-    player.destroy();
-    explosion.setPosition(enemy.x, enemy.y);
-    explosion.explode();
-    pause = true;
-
-  }
-  
- }
 /// movimiento fondo
- function moverFondo()  {
+  function moverFondo()  {
    background1.setY(background1.y+BACKGROUND_VELOCITY);
    background2.setY(background2.y+BACKGROUND_VELOCITY);
      
@@ -191,42 +172,66 @@
      }
    }
 ///// disparos 
-   function disparar(engine)  {
-     if(spaceBar.isDown){
+  function disparar(engine)  {
+    if(spaceBar.isDown){
       disparo.play()
-       bullet.push
-       (engine.add.ellipse
-        (player.x,player.y-player.height/2*PLAYER_SCALE, 5, 15, 0x6666ff))
-       contBullet++;
-       frame = 20;
-     }
-   }
-//// movimiento bala 
-   function moverBala() {
-    let index =-1;
-     for (let i = 0; i < bullet.length ; i++){
-       bullet[i].setY(bullet[i].y-BULLET_VELOCITY)
-       if( bullet[i].y <0 - bullet[i].height) {
-        bullet[i].destroy();
-        index = i;
-       }
-       colision(bullet[i]);
-     }
-     if(index >=0 ){
-      bullet.splice(index,1)
-     }
+      bullet.push
+      (engine.add.ellipse
+      (player.x,player.y-player.height/2*PLAYER_SCALE, 5, 15, 0x6666ff))
+      contBullet++;
+      frame = 20;
+    }
   }
+//// movimiento bala 
+function moverBala() {
+  let index =-1;
+  for (let i = 0; i < bullet.length ; i++){
+    bullet[i].setY(bullet[i].y-BULLET_VELOCITY)
+  if( bullet[i].y <0 - bullet[i].height) {
+    bullet[i].destroy();
+    index = i;
+  }
+    colision(bullet[i]);
+  }
+  if(index >=0 ){
+    bullet.splice(index,1)
+  }
+  }
+
+    /// movimiento enemigo
+function moverEnemy() {
+    enemy.setY(enemy.y + ENEMY_VELOCITY);
+  if (
+    (player.x >= enemy.x - (enemy.width * ENEMY_SCALE) / 2 &&
+    player.x <= enemy.x + (enemy.width * ENEMY_SCALE) / 2 &&
+    player.y >= enemy.y - (enemy.height * ENEMY_SCALE) / 2 &&
+    player.y <= enemy.y + (enemy.height * ENEMY_SCALE) / 2) ||
+    enemy.y >= SCREEN_HEIGHT
+  ) {
+    gameOver.setX(SCREEN_WIDTH / 2);
+    gameOver.setY(SCREEN_WIDTH / 2);
+    enemy.destroy();
+    player.destroy();
+    explosion.setPosition(enemy.x, enemy.y);
+    explosion.explode();
+    sonidoFondo.stop()
+    pause = true;
+  }
+}
 //// colision de objetos
   function colision(bala) {
-    if ((bala.x>=enemy.x-(enemy.width*ENEMY_SCALE)/2 && bala.x<=enemy.x+(enemy.width*ENEMY_SCALE)/2)&&
-    (bala.y>=enemy.y-(enemy.height*ENEMY_SCALE)/2 && bala.y<=enemy.y+(enemy.height*ENEMY_SCALE)/2)){
-      
-      collectEnemy(bala, enemy)
-      explosion.setPosition(enemy.x, enemy.y);
-      explosion.explode();
-      enemy.setY((enemy.height * ENEMY_SCALE)/2); 
-      enemy.setX(Math.floor(Math.random()*(SCREEN_WIDTH-enemy.width) + (enemy.width/2)));
-      bala.destroy();
+    if (
+    bala.x >= enemy.x - (enemy.width * ENEMY_SCALE) / 2 &&
+    bala.x <= enemy.x + (enemy.width * ENEMY_SCALE) / 2 &&
+    bala.y >= enemy.y - (enemy.height * ENEMY_SCALE) / 2 &&
+    bala.y <= enemy.y + (enemy.height * ENEMY_SCALE) / 2
+  ){ 
+    collectEnemy(bala, enemy)
+    explosion.setPosition(enemy.x, enemy.y);
+    explosion.explode();
+    enemy.setY((enemy.height * ENEMY_SCALE)/2); 
+    enemy.setX(Math.floor(Math.random()*(SCREEN_WIDTH-enemy.width) + (enemy.width/2)));
+    bala.destroy();
     }
   }
 /////Score
@@ -234,3 +239,5 @@
     score += 1;
     scoreText.setText("Score:"+score)
   }
+
+
